@@ -1,12 +1,25 @@
 <?php
 
+/*
+ * This file is part of the Lakion package.
+ *
+ * (c) Lakion
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace Lakion\Model;
 
-use Lakion\FightFinishedException;
-
+/**
+ * @author Arkadiusz Krakowiak <arkadiusz.krakowiak@lakion.com>
+ */
 class Duel
 {
-    const CHANCE_THRESHOLD = 5;
+    /**
+     * @var FightSystem
+     */
+    private $fightSystem;
 
     /**
      * @var Hero
@@ -19,6 +32,11 @@ class Duel
     private $secondHero;
 
     /**
+     * @var Hero
+     */
+    private $currentHero;
+
+    /**
      * @var int
      */
     private $turn = 0;
@@ -26,9 +44,12 @@ class Duel
     /**
      * @param Hero $firstHero
      * @param Hero $secondHero
+     * @param FightSystem $fightSystem
      */
-    public function __construct(Hero $firstHero, Hero $secondHero)
+    public function __construct(Hero $firstHero, Hero $secondHero, FightSystem $fightSystem)
     {
+        $this->fightSystem = $fightSystem;
+        $this->currentHero = $firstHero;
         $this->firstHero = $firstHero;
         $this->secondHero = $secondHero;
     }
@@ -50,6 +71,38 @@ class Duel
     }
 
     /**
+     * @return Hero
+     */
+    public function getCurrentHero()
+    {
+        return $this->currentHero;
+    }
+
+    /**
+     * @param $hero
+     */
+    public function setCurrentHero($hero)
+    {
+        $this->currentHero = $hero;
+    }
+
+    /**
+     * @param FightSystem $fightSystem
+     */
+    public function setFightSystem(FightSystem $fightSystem)
+    {
+        $this->fightSystem = $fightSystem;
+    }
+
+    /**
+     * @return FightSystem
+     */
+    public function getFightSystem()
+    {
+        return $this->fightSystem;
+    }
+
+    /**
      * @return int
      */
     public function getTurn()
@@ -57,41 +110,45 @@ class Duel
         return $this->turn;
     }
 
-    public function nextTurn()
+    public function processTurn()
     {
-        $chance = mt_rand(0, 1);
+        if ($this->firstHero === $this->currentHero) {
+            $this->fightSystem->attack($this->currentHero, $this->secondHero);
 
-        $attacker = $this->secondHero;
-        $defender = $this->firstHero;
-
-        if (0 === $chance) {
-            $attacker = $this->firstHero;
-            $defender = $this->secondHero;
+            return;
         }
 
-        $this->attack($attacker, $defender);
-        $this->turn++;
+        $this->fightSystem->attack($this->currentHero, $this->firstHero);
+    }
+
+    public function endTurn()
+    {
+        $this->switchHero();
+
+        $this->nextTurn();
     }
 
     /**
      * @return bool
      */
-    public function isFinished()
+    public function isAnyoneDead()
     {
-        return $this->firstHero->isDead() || $this->secondHero->isDead();
+        return 0 === $this->firstHero->getHealthPoints() || 0 === $this->secondHero->getHealthPoints();
     }
 
-    /**
-     * @param Hero $attacker
-     * @param Hero $victim
-     *
-     * @throws FightFinishedException
-     */
-    private function attack(Hero $attacker, Hero $victim)
+    private function switchHero()
     {
-        $victim->decreaseHealth($attacker->getAttackPoints());
-        if (0 === $victim->getHealthPoints()) {
-            throw new FightFinishedException($victim);
+        if ($this->firstHero === $this->currentHero) {
+            $this->currentHero = $this->secondHero;
+
+            return;
         }
+
+        $this->currentHero = $this->firstHero;
+    }
+
+    private function nextTurn()
+    {
+        $this->turn++;
     }
 }

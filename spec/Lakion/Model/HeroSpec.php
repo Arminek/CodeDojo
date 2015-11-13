@@ -1,10 +1,22 @@
 <?php
 
+/*
+ * This file is part of the Lakion package.
+ *
+ * (c) Lakion
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 namespace spec\Lakion\Model;
 
 use PhpSpec\ObjectBehavior;
 use Prophecy\Argument;
 
+/**
+ * @author Arkadiusz Krakowiak <arkadiusz.krakowiak@lakion.com>
+ */
 class HeroSpec extends ObjectBehavior
 {
 
@@ -61,5 +73,11 @@ class HeroSpec extends ObjectBehavior
     {
         $this->setDefence(10);
         $this->getDefence()->shouldReturn(10);
+    }
+
+    function it_has_chance_on_miss()
+    {
+        $this->setChanceOnMiss(8);
+        $this->getChanceOnMiss()->shouldReturn(8);
     }
 }
